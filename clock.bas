@@ -1,6 +1,4 @@
-'Neopixel 60 led clock. Now with a blender effect where red = hours, green = min blue = seconds
-'and each color fades and blends around the clock .
-
+'RGB Neopixel ws2812b Clock
 udp.begin 60123
 onudp udpreceive
 
@@ -45,7 +43,8 @@ t$ = ""
 'Gamma Table to correct the coutput from leds
 'https://hackaday.com/2016/08/23/rgb-leds-how-to-master-gamma-and-hue-for-perfect-brightness/
 dim gma(12)
-data 0,1,5,13,25,42,63,90,123,161,205,255
+'data 0,3,5,13,25,42,63,90,123,161,205,255
+data 1,4,11,20,34,52,74,100,132,168,209,255
 For i=1 to 12
   read g
   gma(i) = g/255
@@ -81,7 +80,7 @@ wait
 
  
 mytimer:
-
+  milli = millis
   t$ = time$
 
   h = val(left$(t$,2))   'get hours, min sec from time$
@@ -136,7 +135,7 @@ mytimer:
 
   
   else
-    'do a blended clock, where Red, green blue fade out behinds the hand. 
+    'do a blended clock, where Red, green blue fade out behind the hands. 
    if fade = 1 then
     rr = 60 - ((h mod 12) * 5)
     mm = 60 - m
@@ -144,15 +143,18 @@ mytimer:
     for i = 1 to 60
      neo.pixel i-1,c*blend((rr+i)mod 60 +1),c*blend((mm+i)mod 60 +1),c*blend((ss+i)mod 60 +1),1
     next i
+    print ss
    endif
    sfade = (s+59 ) mod 60 ' get the next seconds marker, mod 60 so it goes from 58>59>0>1 etc
    'show the next second hand position over 12 times per second.
    neo.pixel sfade,c*blend((rr+s)mod 60 +1),c*blend((mm+s)mod 60 +1),c*gma(fade)  
   endif
   fade = fade +  1
+  'print millis - milli
 return
 
 htmlchange:
+
 print str$(lowlightpercent)+"%"
 llpercent$ = str$(lowlightpercent)
 maxlightstr$ = str$(maxlight)
@@ -174,9 +176,13 @@ REFRESH    ' refresh (update) the variables between the code and the html
 Return
 
 fill_page:
-
+cls
 a$ = ||
 a$ = a$ + |LED Clock<br>|
+a$ = a$ + "<div id='controls' style='display: table; margin-right:auto;margin-left:auto;text-align:center;>"
+
+
+
 a$ = a$ + "<br>"
 a$ = a$ + "<p>"+llm$+"</p>"
 a$ = a$ + "<br> Start low light mode at "+textbox$(lowlightstart$)+"<br>"
@@ -190,6 +196,7 @@ a$ = a$ + "<br> Time is "+textbox$(t$)+"<br>"
 a$ = a$ + BUTTON$("Save Settings",jump1,"but2")
 print str$(lowlightpercent)
 HTML a$
+print a$
 return
 
 savesettings:
